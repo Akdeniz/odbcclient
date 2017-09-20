@@ -23,8 +23,18 @@ if(UnixODBC_INCLUDE_DIR)
   set(ODBC_CFLAGS "-I${UnixODBC_INCLUDE_DIR} -DHAVE_UNISTD_H -DHAVE_PWD_H -DHAVE_SYS_TYPES_H -DHAVE_LONG_LONG -DSIZEOF_LONG_INT=8")
 endif()
 
-set(SOURCE_FILES main.cpp nanodbc/nanodbc.h nanodbc/nanodbc.cpp)
-add_executable(odbcclient ${SOURCE_FILES})
+FIND_PACKAGE(BISON REQUIRED)
+FIND_PACKAGE(FLEX REQUIRED)
+
+BISON_TARGET(sql_parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/sql_parser.cpp)
+FLEX_TARGET(sql_lexer lexer.l ${CMAKE_CURRENT_BINARY_DIR}/sql_lexer.cpp)
+ADD_FLEX_BISON_DEPENDENCY(sql_lexer sql_parser)
+
+
+set(SOURCE_FILES scanner.hpp main.cpp nanodbc/nanodbc.h nanodbc/nanodbc.cpp )
+add_executable(odbcclient ${SOURCE_FILES} ${FLEX_sql_lexer_OUTPUTS} ${BISON_sql_parser_OUTPUTS} )
+
+target_include_directories(odbcclient PRIVATE . ${CMAKE_CURRENT_BINARY_DIR})
 
 set_target_properties(odbcclient PROPERTIES
 COMPILE_FLAGS "${ODBC_CFLAGS}"

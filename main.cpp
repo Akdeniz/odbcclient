@@ -10,6 +10,8 @@
 
 #include "nanodbc/nanodbc.h"
 
+#include "scanner.hpp"
+
 namespace po = boost::program_options;
 
 long show( nanodbc::result& results )
@@ -91,6 +93,12 @@ void replace_variables( std::string& input, std::unordered_map<std::string, std:
 void handle_options( const std::string& query_file_name, bool just_execute, long fetch_size )
 {
   std::ifstream ifs( query_file_name );
+
+  Scanner scanner( &ifs );
+  MyState state{0};
+  yy::Parser parser( scanner, state );
+  parser.parse();
+
 
   std::shared_ptr<nanodbc::connection> connection;
   std::string connection_string;
